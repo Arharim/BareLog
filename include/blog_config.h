@@ -1,0 +1,20 @@
+#ifndef BLOG_CONFIG_H
+#define BLOG_CONFIG_H
+
+#ifndef BLOG_LEVEL
+#	define BLOG_LEVEL BLOG_LEVEL_DEBUG
+#endif
+
+#ifndef BLOG_RINGBUF_SIZE
+#	define BLOG_RINGBUF_SIZE 256u
+#endif
+
+#ifndef BLOG_UART_BAUDRATE
+#	define BLOG_UART_BAUDRATE 115200u
+#endif
+
+#ifndef BLOG_ENABLE_TIMESTAMP
+#	define BLOG_ENABLE_TIMESTAMP 0
+#endif
+
+#endif
