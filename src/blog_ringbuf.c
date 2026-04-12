@@ -1,20 +1,24 @@
 #include "blog_ringbuf.h"
+#include "blog_irq.h"
 
 void blog_ringbuf_init(blog_ringbuf_t *rb)
 {
-	uint16_t i;
+	uint32_t primask = blog_irq_save();
 
 	rb->head = 0u;
 	rb->tail = 0u;
 
+	uint16_t i;
 	for (i = 0u; i < BLOG_RINGBUF_SIZE; i++)
 	{
 		rb->buf[i] = 0u;
 	}
+
+	blog_irq_restore(primask);
 }
 
-uint16_t blog_ringbuf_push(blog_ringbuf_t *rb, const uint8_t *data,
-                           uint16_t len)
+static uint16_t ringbuf_push_impl(blog_ringbuf_t *rb, const uint8_t *data,
+                                  uint16_t len)
 {
 	uint16_t i;
 
@@ -34,7 +38,23 @@ uint16_t blog_ringbuf_push(blog_ringbuf_t *rb, const uint8_t *data,
 	return i;
 }
 
-uint16_t blog_ringbuf_pop(blog_ringbuf_t *rb, uint8_t *data, uint16_t len)
+uint16_t blog_ringbuf_push(blog_ringbuf_t *rb, const uint8_t *data,
+                           uint16_t len)
+{
+	uint32_t primask = blog_irq_save();
+	uint16_t result = ringbuf_push_impl(rb, data, len);
+	blog_irq_restore(primask);
+	return result;
+}
+
+uint16_t blog_ringbuf_push_isr(blog_ringbuf_t *rb, const uint8_t *data,
+                               uint16_t len)
+{
+	return ringbuf_push_impl(rb, data, len);
+}
+
+static uint16_t ringbuf_pop_impl(blog_ringbuf_t *rb, uint8_t *data,
+                                 uint16_t len)
 {
 	uint16_t i;
 
@@ -52,6 +72,19 @@ uint16_t blog_ringbuf_pop(blog_ringbuf_t *rb, uint8_t *data, uint16_t len)
 	return i;
 }
 
+uint16_t blog_ringbuf_pop(blog_ringbuf_t *rb, uint8_t *data, uint16_t len)
+{
+	uint32_t primask = blog_irq_save();
+	uint16_t result = ringbuf_pop_impl(rb, data, len);
+	blog_irq_restore(primask);
+	return result;
+}
+
+uint16_t blog_ringbuf_pop_isr(blog_ringbuf_t *rb, uint8_t *data, uint16_t len)
+{
+	return ringbuf_pop_impl(rb, data, len);
+}
+
 uint16_t blog_ringbuf_available(const blog_ringbuf_t *rb)
 {
 	uint16_t head = rb->head;
@@ -67,5 +100,7 @@ uint16_t blog_ringbuf_available(const blog_ringbuf_t *rb)
 
 void blog_ringbuf_flush(blog_ringbuf_t *rb)
 {
+	uint32_t primask = blog_irq_save();
 	rb->tail = rb->head;
+	blog_irq_restore(primask);
 }

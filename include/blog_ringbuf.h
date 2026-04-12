@@ -18,7 +18,10 @@ typedef struct
 void blog_ringbuf_init(blog_ringbuf_t *rb);
 uint16_t blog_ringbuf_push(blog_ringbuf_t *rb, const uint8_t *data,
                            uint16_t len);
+uint16_t blog_ringbuf_push_isr(blog_ringbuf_t *rb, const uint8_t *data,
+                               uint16_t len);
 uint16_t blog_ringbuf_pop(blog_ringbuf_t *rb, uint8_t *data, uint16_t len);
+uint16_t blog_ringbuf_pop_isr(blog_ringbuf_t *rb, uint8_t *data, uint16_t len);
 uint16_t blog_ringbuf_available(const blog_ringbuf_t *rb);
 void blog_ringbuf_flush(blog_ringbuf_t *rb);
 
