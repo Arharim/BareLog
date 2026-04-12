@@ -44,6 +44,7 @@ add_executable(${PROJECT_NAME}.elf
 	${UHAL_PORT_SOURCES}
 	${CMAKE_SOURCE_DIR}/src/main.c
 	${CMAKE_SOURCE_DIR}/src/syscalls.c
+	${CMAKE_SOURCE_DIR}/src/blog_isr.c
 )
 
 target_link_libraries(${PROJECT_NAME}.elf PRIVATE blog)

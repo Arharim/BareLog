@@ -3,6 +3,10 @@
 #include "blog_uart_port.h"
 #include "stm32f10x.h"
 
+#define BLOG_DMA_CHANNEL DMA1_Channel4
+
+static volatile uint16_t dma_tx_len;
+
 static void gpio_init(void)
 {
 	RCC->APB2ENR |= BLOG_UART_GPIO_RCC;
@@ -34,11 +38,23 @@ static void gpio_init(void)
 	}
 }
 
+static void dma_init(void)
+{
+	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
+
+	BLOG_DMA_CHANNEL->CCR = 0u;
+	dma_tx_len = 0u;
+
+	NVIC_SetPriority(DMA1_Channel4_IRQn, 1u);
+	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+}
+
 void blog_uart_init(void)
 {
 	uint16_t brr_val;
 
 	gpio_init();
+	dma_init();
 
 	RCC->APB2ENR |= BLOG_UART_RCC_BIT;
 
@@ -46,23 +62,43 @@ void blog_uart_init(void)
 	BLOG_UARTx->BRR = brr_val;
 
 	BLOG_UARTx->CR1 = (uint16_t)(USART_CR1_UE | USART_CR1_TE | USART_CR1_RE);
+	BLOG_UARTx->CR3 = USART_CR3_DMAT;
 }
 
-void blog_uart_putc(char c)
+void blog_uart_dma_send(const uint8_t *data, uint16_t len)
 {
-	while ((BLOG_UARTx->SR & USART_SR_TXE) == 0u)
+	if (len == 0u)
 	{
+		return;
 	}
 
-	BLOG_UARTx->DR = (uint16_t)c;
+	dma_tx_len = len;
+
+	BLOG_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
+	BLOG_DMA_CHANNEL->CMAR = (uint32_t)data;
+	BLOG_DMA_CHANNEL->CPAR = (uint32_t)&(BLOG_UARTx->DR);
+	BLOG_DMA_CHANNEL->CNDTR = (uint32_t)len;
+	BLOG_DMA_CHANNEL->CCR = (uint32_t)((1u << 7u) | (1u << 4u) | (0u << 6u) |
+	                                   (1u << 1u) | (1u << 3u) | 0x01u);
 }
 
-void blog_uart_puts(const char *s, uint16_t len)
+uint16_t blog_uart_dma_running(void)
 {
-	uint16_t i;
-
-	for (i = 0u; i < len; i++)
+	if ((BLOG_DMA_CHANNEL->CCR & 0x01u) != 0u)
 	{
-		blog_uart_putc(s[i]);
+		return 1u;
 	}
+
+	return 0u;
+}
+
+void blog_uart_dma_irq_handler(void)
+{
+	if ((DMA1->ISR & (1u << 13u)) != 0u)
+	{
+		DMA1->IFCR = (1u << 13u);
+	}
+
+	dma_tx_len = 0u;
+	BLOG_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
 }

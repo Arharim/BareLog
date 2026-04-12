@@ -4,7 +4,8 @@
 #include <stdint.h>
 
 void blog_uart_init(void);
-void blog_uart_putc(char c);
-void blog_uart_puts(const char *s, uint16_t len);
+void blog_uart_dma_send(const uint8_t *data, uint16_t len);
+uint16_t blog_uart_dma_running(void);
+void blog_uart_dma_irq_handler(void);
 
 #endif
