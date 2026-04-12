@@ -1,25 +1,27 @@
 #include "blog.h"
 #include "blog_config.h"
+#include "blog_irq.h"
 #include "blog_levels.h"
 #include "blog_ringbuf.h"
 #include "blog_uart.h"
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 
 static blog_ringbuf_t blog_buf;
+static volatile blog_level_t blog_runtime_level = BLOG_LEVEL;
+static uint8_t dma_tx_buf[BLOG_DMA_TX_BUF_SIZE];
 
 static const char *level_strings[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
 static uint16_t str_len(const char *s)
 {
 	uint16_t len = 0u;
-
 	while (s[len] != '\0')
 	{
 		len++;
 	}
-
 	return len;
 }
 
@@ -175,33 +177,46 @@ void blog_init(void)
 	blog_uart_init();
 }
 
-void blog_flush(void)
+void blog_set_level(blog_level_t level)
 {
-	uint8_t tmp[64u];
-	uint16_t count;
-
-	do
-	{
-		count = blog_ringbuf_pop(&blog_buf, tmp, sizeof(tmp));
-		if (count > 0u)
-		{
-			blog_uart_puts((const char *)tmp, count);
-		}
-	} while (count > 0u);
+	blog_runtime_level = level;
 }
 
-void blog_write(blog_level_t level, const char *file, int line, const char *fmt,
-                ...)
+blog_level_t blog_get_level(void)
+{
+	return blog_runtime_level;
+}
+
+static void blog_flush_dma(void)
+{
+	if (blog_uart_dma_running() != 0u)
+	{
+		return;
+	}
+
+	uint16_t count =
+	    blog_ringbuf_pop(&blog_buf, dma_tx_buf, BLOG_DMA_TX_BUF_SIZE);
+	if (count > 0u)
+	{
+		blog_uart_dma_send(dma_tx_buf, count);
+	}
+}
+
+void blog_flush(void)
+{
+	blog_flush_dma();
+}
+
+static void do_blog_write(blog_level_t level, const char *file, int line,
+                          const char *fmt, va_list args, uint16_t use_isr)
 {
 	char msg[128u];
 	uint16_t pos;
-	va_list args;
+
+	(void)use_isr;
 
 	pos = format_prefix(msg, sizeof(msg), level, file, line);
-
-	va_start(args, fmt);
 	pos += format_msg(&msg[pos], (uint16_t)(sizeof(msg) - pos), fmt, args);
-	va_end(args);
 
 	if (pos < sizeof(msg))
 	{
@@ -212,5 +227,30 @@ void blog_write(blog_level_t level, const char *file, int line, const char *fmt,
 		msg[pos++] = '\n';
 	}
 
-	blog_ringbuf_push(&blog_buf, (const uint8_t *)msg, pos);
+	if (use_isr != 0u)
+	{
+		blog_ringbuf_push_isr(&blog_buf, (const uint8_t *)msg, pos);
+	}
+	else
+	{
+		blog_ringbuf_push(&blog_buf, (const uint8_t *)msg, pos);
+	}
+}
+
+void blog_write(blog_level_t level, const char *file, int line, const char *fmt,
+                ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	do_blog_write(level, file, line, fmt, args, 0u);
+	va_end(args);
+}
+
+void blog_write_isr(blog_level_t level, const char *file, int line,
+                    const char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	do_blog_write(level, file, line, fmt, args, 1u);
+	va_end(args);
 }
