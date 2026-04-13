@@ -3,19 +3,25 @@
 #include "blog_irq.h"
 #include "blog_levels.h"
 #include "blog_ringbuf.h"
+#include "blog_timestamp.h"
 #include "blog_uart.h"
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <string.h>
 
 static blog_ringbuf_t blog_buf;
 static volatile blog_level_t blog_runtime_level = BLOG_LEVEL;
+#ifdef BLOG_TEST
+#	define BLOG_STATIC
+#else
+#	define BLOG_STATIC static
+#endif
+
 static uint8_t dma_tx_buf[BLOG_DMA_TX_BUF_SIZE];
 
 static const char *level_strings[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
-static uint16_t str_len(const char *s)
+BLOG_STATIC uint16_t str_len(const char *s)
 {
 	uint16_t len = 0u;
 	while (s[len] != '\0')
@@ -25,7 +31,7 @@ static uint16_t str_len(const char *s)
 	return len;
 }
 
-static uint16_t uint32_to_str(char *out, uint32_t val)
+BLOG_STATIC uint16_t uint32_to_str(char *out, uint32_t val)
 {
 	char tmp[10u];
 	uint16_t i = 0u;
@@ -52,12 +58,22 @@ static uint16_t uint32_to_str(char *out, uint32_t val)
 	return i;
 }
 
-static uint16_t format_prefix(char *out, uint16_t out_size, blog_level_t level,
-                              const char *file, int line)
+BLOG_STATIC uint16_t format_prefix(char *out, uint16_t out_size,
+                                   blog_level_t level, const char *file,
+                                   int line)
 {
 	uint16_t pos = 0u;
 	uint16_t slen;
 	uint16_t nlen;
+
+#if BLOG_ENABLE_TIMESTAMP
+	uint32_t ts = blog_timestamp_get();
+	out[pos++] = '[';
+	nlen = uint32_to_str(&out[pos], ts);
+	pos += nlen;
+	out[pos++] = ']';
+	out[pos++] = ' ';
+#endif
 
 	out[pos++] = '[';
 	slen = str_len(level_strings[level]);
@@ -93,8 +109,8 @@ static uint16_t format_prefix(char *out, uint16_t out_size, blog_level_t level,
 	return pos;
 }
 
-static uint16_t format_msg(char *out, uint16_t out_size, const char *fmt,
-                           va_list args)
+BLOG_STATIC uint16_t format_msg(char *out, uint16_t out_size, const char *fmt,
+                                va_list args)
 {
 	uint16_t pos = 0u;
 	uint16_t i = 0u;
@@ -175,6 +191,9 @@ void blog_init(void)
 {
 	blog_ringbuf_init(&blog_buf);
 	blog_uart_init();
+#if BLOG_ENABLE_TIMESTAMP
+	blog_timestamp_init();
+#endif
 }
 
 void blog_set_level(blog_level_t level)
