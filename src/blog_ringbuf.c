@@ -7,12 +7,7 @@ void blog_ringbuf_init(blog_ringbuf_t *rb)
 
 	rb->head = 0u;
 	rb->tail = 0u;
-
-	uint16_t i;
-	for (i = 0u; i < BLOG_RINGBUF_SIZE; i++)
-	{
-		rb->buf[i] = 0u;
-	}
+	rb->dropped = 0u;
 
 	blog_irq_restore(primask);
 }
@@ -24,10 +19,12 @@ static uint16_t ringbuf_push_impl(blog_ringbuf_t *rb, const uint8_t *data,
 
 	for (i = 0u; i < len; i++)
 	{
-		uint16_t next = (uint16_t)((rb->head + 1u) % BLOG_RINGBUF_SIZE);
+		uint16_t next = (uint16_t)((rb->head + 1u) & (BLOG_RINGBUF_SIZE - 1u));
 
 		if (next == rb->tail)
 		{
+			uint16_t remaining = (uint16_t)(len - i);
+			rb->dropped = (uint16_t)(rb->dropped + remaining);
 			break;
 		}
 
@@ -66,7 +63,7 @@ static uint16_t ringbuf_pop_impl(blog_ringbuf_t *rb, uint8_t *data,
 		}
 
 		data[i] = rb->buf[rb->tail];
-		rb->tail = (uint16_t)((rb->tail + 1u) % BLOG_RINGBUF_SIZE);
+		rb->tail = (uint16_t)((rb->tail + 1u) & (BLOG_RINGBUF_SIZE - 1u));
 	}
 
 	return i;
@@ -98,9 +95,22 @@ uint16_t blog_ringbuf_available(const blog_ringbuf_t *rb)
 	return (uint16_t)(BLOG_RINGBUF_SIZE - tail + head);
 }
 
+uint16_t blog_ringbuf_get_dropped(const blog_ringbuf_t *rb)
+{
+	return rb->dropped;
+}
+
+void blog_ringbuf_clear_dropped(blog_ringbuf_t *rb)
+{
+	uint32_t primask = blog_irq_save();
+	rb->dropped = 0u;
+	blog_irq_restore(primask);
+}
+
 void blog_ringbuf_flush(blog_ringbuf_t *rb)
 {
 	uint32_t primask = blog_irq_save();
 	rb->tail = rb->head;
+	rb->dropped = 0u;
 	blog_irq_restore(primask);
 }
