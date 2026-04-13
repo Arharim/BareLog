@@ -78,8 +78,8 @@ void blog_uart_dma_send(const uint8_t *data, uint16_t len)
 	BLOG_DMA_CHANNEL->CMAR = (uint32_t)data;
 	BLOG_DMA_CHANNEL->CPAR = (uint32_t)&(BLOG_UARTx->DR);
 	BLOG_DMA_CHANNEL->CNDTR = (uint32_t)len;
-	BLOG_DMA_CHANNEL->CCR = (uint32_t)((1u << 7u) | (1u << 4u) | (0u << 6u) |
-	                                   (1u << 1u) | (1u << 3u) | 0x01u);
+	BLOG_DMA_CHANNEL->CCR =
+	    (uint32_t)((1u << 7u) | (1u << 4u) | (1u << 1u) | (1u << 3u) | 0x01u);
 }
 
 uint16_t blog_uart_dma_running(void)
