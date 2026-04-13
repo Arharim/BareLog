@@ -13,23 +13,39 @@ include(${CMAKE_SOURCE_DIR}/port/${UHAL_TARGET}/target.cmake)
 
 set(RTT_DIR ${CMAKE_SOURCE_DIR}/ext/segger-rtt/RTT)
 
-set(BLOG_SOURCES
+set(BLOG_CORE_SOURCES
 	${CMAKE_SOURCE_DIR}/src/blog.c
 	${CMAKE_SOURCE_DIR}/src/blog_ringbuf.c
-	${CMAKE_SOURCE_DIR}/src/blog_uart.c
-	${CMAKE_SOURCE_DIR}/src/blog_swo.c
-	${CMAKE_SOURCE_DIR}/src/blog_flash.c
 	${CMAKE_SOURCE_DIR}/src/blog_timestamp.c
-	${CMAKE_SOURCE_DIR}/src/blog_rtt.c
-	${RTT_DIR}/SEGGER_RTT.c
 )
+
+set(BLOG_BACKEND_SOURCES "")
+set(BLOG_EXTRA_INCLUDES "")
+
+if(NOT DEFINED BLOG_BACKEND)
+	set(BLOG_BACKEND BLOG_BACKEND_UART_DMA)
+endif()
+
+if(BLOG_BACKEND STREQUAL "BLOG_BACKEND_UART_DMA")
+	list(APPEND BLOG_BACKEND_SOURCES ${CMAKE_SOURCE_DIR}/src/blog_uart.c)
+elseif(BLOG_BACKEND STREQUAL "BLOG_BACKEND_SWO")
+	list(APPEND BLOG_BACKEND_SOURCES ${CMAKE_SOURCE_DIR}/src/blog_swo.c)
+elseif(BLOG_BACKEND STREQUAL "BLOG_BACKEND_RTT")
+	list(APPEND BLOG_BACKEND_SOURCES
+		${CMAKE_SOURCE_DIR}/src/blog_rtt.c
+		${RTT_DIR}/SEGGER_RTT.c
+	)
+	list(APPEND BLOG_EXTRA_INCLUDES ${RTT_DIR})
+elseif(BLOG_BACKEND STREQUAL "BLOG_BACKEND_FLASH")
+	list(APPEND BLOG_BACKEND_SOURCES ${CMAKE_SOURCE_DIR}/src/blog_flash.c)
+endif()
 
 set(BLOG_INCLUDES
 	${CMAKE_SOURCE_DIR}/include
-	${RTT_DIR}
+	${BLOG_EXTRA_INCLUDES}
 )
 
-add_library(blog STATIC ${BLOG_SOURCES})
+add_library(blog STATIC ${BLOG_CORE_SOURCES} ${BLOG_BACKEND_SOURCES})
 
 target_include_directories(blog PUBLIC
 	${BLOG_INCLUDES}
@@ -38,6 +54,7 @@ target_include_directories(blog PUBLIC
 
 target_compile_definitions(blog PUBLIC
 	${UHAL_TARGET_DEFINES}
+	BLOG_BACKEND=${BLOG_BACKEND}
 )
 
 target_compile_options(blog PRIVATE
@@ -64,6 +81,7 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
 
 target_compile_definitions(${PROJECT_NAME}.elf PRIVATE
 	${UHAL_TARGET_DEFINES}
+	BLOG_BACKEND=${BLOG_BACKEND}
 )
 
 target_compile_options(${PROJECT_NAME}.elf PRIVATE

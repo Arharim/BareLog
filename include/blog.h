@@ -5,7 +5,16 @@
 #include "blog_irq.h"
 #include "blog_levels.h"
 #include "blog_ringbuf.h"
-#include "blog_uart.h"
+
+#if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
+#	include "blog_uart.h"
+#elif BLOG_BACKEND == BLOG_BACKEND_SWO
+#	include "blog_swo.h"
+#elif BLOG_BACKEND == BLOG_BACKEND_RTT
+#	include "blog_rtt.h"
+#elif BLOG_BACKEND == BLOG_BACKEND_FLASH
+#	include "blog_flash.h"
+#endif
 
 void blog_init(void);
 void blog_flush(void);

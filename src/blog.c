@@ -4,22 +4,33 @@
 #include "blog_levels.h"
 #include "blog_ringbuf.h"
 #include "blog_timestamp.h"
-#include "blog_uart.h"
 
 #include <stdarg.h>
 #include <stdint.h>
 
 static blog_ringbuf_t blog_buf;
 static volatile blog_level_t blog_runtime_level = BLOG_LEVEL;
+
 #ifdef BLOG_TEST
 #	define BLOG_STATIC
 #else
 #	define BLOG_STATIC static
 #endif
 
-static uint8_t dma_tx_buf[BLOG_DMA_TX_BUF_SIZE];
+#define BLOG_TX_BUF_SIZE 128u
+static uint8_t blog_tx_buf[BLOG_TX_BUF_SIZE];
 
 static const char *level_strings[] = {"DEBUG", "INFO", "WARN", "ERROR"};
+
+#if BLOG_ENABLE_COLOR
+static const char *level_colors[] = {
+    "\033[36m",
+    "\033[32m",
+    "\033[33m",
+    "\033[31m",
+};
+#	define BLOG_COLOR_RESET "\033[0m"
+#endif
 
 BLOG_STATIC uint16_t str_len(const char *s)
 {
@@ -29,6 +40,17 @@ BLOG_STATIC uint16_t str_len(const char *s)
 		len++;
 	}
 	return len;
+}
+
+BLOG_STATIC uint16_t str_copy(char *dst, const char *src, uint16_t max)
+{
+	uint16_t i = 0u;
+	while (src[i] != '\0' && i < max)
+	{
+		dst[i] = src[i];
+		i++;
+	}
+	return i;
 }
 
 BLOG_STATIC uint16_t uint32_to_str(char *out, uint32_t val)
@@ -75,6 +97,10 @@ BLOG_STATIC uint16_t format_prefix(char *out, uint16_t out_size,
 	out[pos++] = ' ';
 #endif
 
+#if BLOG_ENABLE_COLOR
+	pos += str_copy(&out[pos], level_colors[level], out_size - pos);
+#endif
+
 	out[pos++] = '[';
 	slen = str_len(level_strings[level]);
 	if ((pos + slen + 2u) < out_size)
@@ -86,6 +112,11 @@ BLOG_STATIC uint16_t format_prefix(char *out, uint16_t out_size,
 		}
 	}
 	out[pos++] = ']';
+
+#if BLOG_ENABLE_COLOR
+	pos += str_copy(&out[pos], BLOG_COLOR_RESET, out_size - pos);
+#endif
+
 	out[pos++] = ' ';
 
 	slen = str_len(file);
@@ -99,10 +130,8 @@ BLOG_STATIC uint16_t format_prefix(char *out, uint16_t out_size,
 	}
 
 	out[pos++] = ':';
-
 	nlen = uint32_to_str(&out[pos], (uint32_t)line);
 	pos += nlen;
-
 	out[pos++] = ':';
 	out[pos++] = ' ';
 
@@ -187,10 +216,57 @@ BLOG_STATIC uint16_t format_msg(char *out, uint16_t out_size, const char *fmt,
 	return pos;
 }
 
+static void backend_init(void)
+{
+#if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
+	blog_uart_init();
+#elif BLOG_BACKEND == BLOG_BACKEND_SWO
+	blog_swo_init();
+#elif BLOG_BACKEND == BLOG_BACKEND_RTT
+	blog_rtt_init();
+#elif BLOG_BACKEND == BLOG_BACKEND_FLASH
+	blog_flash_init();
+#endif
+}
+
+static uint16_t backend_busy(void)
+{
+#if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
+	return blog_uart_dma_running();
+#else
+	return 0u;
+#endif
+}
+
+static void backend_send(const uint8_t *data, uint16_t len)
+{
+#if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
+	blog_uart_dma_send(data, len);
+#elif BLOG_BACKEND == BLOG_BACKEND_SWO
+	blog_swo_puts((const char *)data, len);
+#elif BLOG_BACKEND == BLOG_BACKEND_RTT
+	blog_rtt_puts((const char *)data, len);
+#elif BLOG_BACKEND == BLOG_BACKEND_FLASH
+	blog_flash_write(data, len);
+#endif
+}
+
+static uint16_t format_overflow_msg(char *out, uint16_t out_size,
+                                    uint16_t dropped)
+{
+	uint16_t pos = 0u;
+
+	pos += str_copy(&out[pos], "--- ", out_size - pos);
+	pos += uint32_to_str(&out[pos], (uint32_t)dropped);
+	pos += str_copy(&out[pos], " messages lost ---\r\n", out_size - pos);
+
+	return pos;
+}
+
 void blog_init(void)
 {
 	blog_ringbuf_init(&blog_buf);
-	blog_uart_init();
+	backend_init();
 #if BLOG_ENABLE_TIMESTAMP
 	blog_timestamp_init();
 #endif
@@ -206,33 +282,35 @@ blog_level_t blog_get_level(void)
 	return blog_runtime_level;
 }
 
-static void blog_flush_dma(void)
+void blog_flush(void)
 {
-	if (blog_uart_dma_running() != 0u)
+	if (backend_busy() != 0u)
 	{
 		return;
 	}
 
-	uint16_t count =
-	    blog_ringbuf_pop(&blog_buf, dma_tx_buf, BLOG_DMA_TX_BUF_SIZE);
+	uint16_t dropped = blog_ringbuf_get_dropped(&blog_buf);
+	if (dropped > 0u)
+	{
+		char overflow_msg[48u];
+		uint16_t olen =
+		    format_overflow_msg(overflow_msg, sizeof(overflow_msg), dropped);
+		blog_ringbuf_clear_dropped(&blog_buf);
+		blog_ringbuf_push(&blog_buf, (const uint8_t *)overflow_msg, olen);
+	}
+
+	uint16_t count = blog_ringbuf_pop(&blog_buf, blog_tx_buf, BLOG_TX_BUF_SIZE);
 	if (count > 0u)
 	{
-		blog_uart_dma_send(dma_tx_buf, count);
+		backend_send(blog_tx_buf, count);
 	}
-}
-
-void blog_flush(void)
-{
-	blog_flush_dma();
 }
 
 static void do_blog_write(blog_level_t level, const char *file, int line,
                           const char *fmt, va_list args, uint16_t use_isr)
 {
-	char msg[128u];
+	char msg[192u];
 	uint16_t pos;
-
-	(void)use_isr;
 
 	pos = format_prefix(msg, sizeof(msg), level, file, line);
 	pos += format_msg(&msg[pos], (uint16_t)(sizeof(msg) - pos), fmt, args);

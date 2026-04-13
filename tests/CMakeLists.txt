@@ -39,10 +39,11 @@ target_include_directories(test_format PRIVATE
 
 target_compile_definitions(test_format PRIVATE
 	BLOG_RINGBUF_SIZE=256
-	BLOG_DMA_TX_BUF_SIZE=128
 	BLOG_ENABLE_TIMESTAMP=0
+	BLOG_ENABLE_COLOR=0
 	BLOG_TEST
 	BLOG_LEVEL=BLOG_LEVEL_DEBUG
+	BLOG_BACKEND=1
 )
 
 target_link_libraries(test_format unity)
