@@ -11,6 +11,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(${CMAKE_SOURCE_DIR}/port/${UHAL_TARGET}/target.cmake)
 
+set(RTT_DIR ${CMAKE_SOURCE_DIR}/ext/segger-rtt/RTT)
+
 set(BLOG_SOURCES
 	${CMAKE_SOURCE_DIR}/src/blog.c
 	${CMAKE_SOURCE_DIR}/src/blog_ringbuf.c
@@ -18,10 +20,13 @@ set(BLOG_SOURCES
 	${CMAKE_SOURCE_DIR}/src/blog_swo.c
 	${CMAKE_SOURCE_DIR}/src/blog_flash.c
 	${CMAKE_SOURCE_DIR}/src/blog_timestamp.c
+	${CMAKE_SOURCE_DIR}/src/blog_rtt.c
+	${RTT_DIR}/SEGGER_RTT.c
 )
 
 set(BLOG_INCLUDES
 	${CMAKE_SOURCE_DIR}/include
+	${RTT_DIR}
 )
 
 add_library(blog STATIC ${BLOG_SOURCES})
