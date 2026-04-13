@@ -26,5 +26,27 @@ target_compile_definitions(test_ringbuf PRIVATE
 
 target_link_libraries(test_ringbuf unity)
 
+add_executable(test_format
+	test_format.c
+	${CMAKE_SOURCE_DIR}/../src/blog.c
+	${CMAKE_SOURCE_DIR}/../src/blog_ringbuf.c
+	mock_backend.c
+)
+
+target_include_directories(test_format PRIVATE
+	${CMAKE_SOURCE_DIR}/../include
+)
+
+target_compile_definitions(test_format PRIVATE
+	BLOG_RINGBUF_SIZE=256
+	BLOG_DMA_TX_BUF_SIZE=128
+	BLOG_ENABLE_TIMESTAMP=0
+	BLOG_TEST
+	BLOG_LEVEL=BLOG_LEVEL_DEBUG
+)
+
+target_link_libraries(test_format unity)
+
 enable_testing()
 add_test(NAME ringbuf COMMAND test_ringbuf)
+add_test(NAME format COMMAND test_format)

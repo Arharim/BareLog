@@ -15,6 +15,9 @@ set(BLOG_SOURCES
 	${CMAKE_SOURCE_DIR}/src/blog.c
 	${CMAKE_SOURCE_DIR}/src/blog_ringbuf.c
 	${CMAKE_SOURCE_DIR}/src/blog_uart.c
+	${CMAKE_SOURCE_DIR}/src/blog_swo.c
+	${CMAKE_SOURCE_DIR}/src/blog_flash.c
+	${CMAKE_SOURCE_DIR}/src/blog_timestamp.c
 )
 
 set(BLOG_INCLUDES
