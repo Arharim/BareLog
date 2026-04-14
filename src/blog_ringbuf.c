@@ -23,8 +23,8 @@ static uint16_t ringbuf_push_impl(blog_ringbuf_t *rb, const uint8_t *data,
 
 		if (next == rb->tail)
 		{
-			uint16_t remaining = (uint16_t)(len - i);
-			rb->dropped = (uint16_t)(rb->dropped + remaining);
+			uint32_t sum = (uint32_t)rb->dropped + (uint32_t)(len - i);
+			rb->dropped = (sum > 65535u) ? 65535u : (uint16_t)sum;
 			break;
 		}
 

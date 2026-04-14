@@ -63,6 +63,12 @@ void blog_flash_init(void)
 	flash_lock();
 }
 
+void blog_flash_deinit(void)
+{
+	flash_lock();
+	flash_pos = 0u;
+}
+
 uint16_t blog_flash_write(const uint8_t *data, uint16_t len)
 {
 	uint16_t i;

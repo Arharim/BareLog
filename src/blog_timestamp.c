@@ -14,6 +14,13 @@ void blog_timestamp_init(void)
 #endif
 }
 
+void blog_timestamp_deinit(void)
+{
+#if defined(__CORTEX_M) && (__CORTEX_M >= 3u)
+	DWT->CTRL &= ~DWT_CTRL_CYCCNTENA_Msk;
+#endif
+}
+
 uint32_t blog_timestamp_get(void)
 {
 #if defined(__CORTEX_M) && (__CORTEX_M >= 3u)

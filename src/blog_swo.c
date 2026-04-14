@@ -16,6 +16,12 @@ void blog_swo_init(void)
 	ITM_TER = 1u;
 }
 
+void blog_swo_deinit(void)
+{
+	ITM_TCR = 0u;
+	ITM_TER = 0u;
+}
+
 void blog_swo_putc(char c)
 {
 	if ((ITM_TCR & ITM_TCR_ITMENA) == 0u)
@@ -43,6 +49,10 @@ void blog_swo_puts(const char *s, uint16_t len)
 #else
 
 void blog_swo_init(void)
+{
+}
+
+void blog_swo_deinit(void)
 {
 }
 

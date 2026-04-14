@@ -12,6 +12,7 @@
 #endif
 
 void blog_flash_init(void);
+void blog_flash_deinit(void);
 uint16_t blog_flash_write(const uint8_t *data, uint16_t len);
 void blog_flash_read(uint32_t offset, uint8_t *data, uint16_t len);
 uint16_t blog_flash_used(void);

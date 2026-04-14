@@ -19,6 +19,10 @@ void blog_rtt_init(void)
 	                          BLOG_RTT_BUFFER_SIZE, BLOG_RTT_MODE);
 }
 
+void blog_rtt_deinit(void)
+{
+}
+
 void blog_rtt_putc(char c)
 {
 	SEGGER_RTT_PutChar(BLOG_RTT_CHANNEL, (unsigned char)c);
