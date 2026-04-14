@@ -1,8 +1,8 @@
 #ifndef BLOG_CONFIG_H
 #define BLOG_CONFIG_H
 
-#define BLOG_VERSION_MAJOR 0
-#define BLOG_VERSION_MINOR 9
+#define BLOG_VERSION_MAJOR 1
+#define BLOG_VERSION_MINOR 0
 #define BLOG_VERSION_PATCH 0
 
 #include <stdint.h>
