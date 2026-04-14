@@ -20,6 +20,32 @@ flash-jlink: build-arm
 clean-arm:
 	rm -rf build-arm
 
+# ── Build specific backend ──────────────────────────────────────────
+
+build-backend backend:
+	cmake -B build-{{ backend }} -G "MinGW Makefiles" \
+		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake \
+		-DBLOG_BACKEND={{ backend }} .
+	cmake --build build-{{ backend }}
+
+build-uart: (build-backend "BLOG_BACKEND_UART_DMA")
+
+build-swo: (build-backend "BLOG_BACKEND_SWO")
+
+build-rtt: (build-backend "BLOG_BACKEND_RTT")
+
+build-flash: (build-backend "BLOG_BACKEND_FLASH")
+
+# ── Build all backends + show sizes ─────────────────────────────────
+
+build-all: build-uart build-swo build-rtt build-flash
+
+size:
+	@echo "=== UART DMA ===" && arm-none-eabi-size build-BLOG_BACKEND_UART_DMA/BareLog.elf 2>/dev/null || echo "(not built)"
+	@echo "=== SWO ===" && arm-none-eabi-size build-BLOG_BACKEND_SWO/BareLog.elf 2>/dev/null || echo "(not built)"
+	@echo "=== RTT ===" && arm-none-eabi-size build-BLOG_BACKEND_RTT/BareLog.elf 2>/dev/null || echo "(not built)"
+	@echo "=== Flash ===" && arm-none-eabi-size build-BLOG_BACKEND_FLASH/BareLog.elf 2>/dev/null || echo "(not built)"
+
 # ── Host tests (native gcc) ─────────────────────────────────────────
 
 test:
@@ -36,7 +62,7 @@ clean-tests:
 # ── Formatting ──────────────────────────────────────────────────────
 
 fmt:
-	clang-format -i src/*.c include/*.h port/stm32f1/include/*.h tests/*.c
+	clang-format -i src/*.c include/*.h port/stm32f1/include/*.h tests/*.c examples/*/*.c
 
 # ── Flash decode ────────────────────────────────────────────────────
 
@@ -46,3 +72,4 @@ flash-decode file:
 # ── All clean ───────────────────────────────────────────────────────
 
 clean: clean-arm clean-tests
+	rm -rf build-BLOG_BACKEND_*
