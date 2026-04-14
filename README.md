@@ -115,10 +115,10 @@ Typical figures (core + backend only, excluding startup):
 
 | Backend | ROM (text) | RAM (data+bss) |
 |---------|-----------|----------------|
-| UART DMA | ~3 KB | ~260 B + ringbuf |
-| SWO | ~2 KB | ~260 B + ringbuf |
-| SEGGER RTT | ~4 KB | ~260 B + ringbuf + RTT buffer |
-| Flash | ~2.5 KB | ~260 B + ringbuf |
+| UART DMA | 2884 B | 1944 B |
+| SWO | 2652 B | 1936 B |
+| SEGGER RTT | 3520 B | 2280 B |
+| Flash | 2864 B | 1944 B |
 
 ## Backend Comparison
 
