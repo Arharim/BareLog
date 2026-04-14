@@ -10,8 +10,7 @@ build*/
 *.d
 *.su
 *.i
-*.s
-*~
+# *.s intentionally not ignored: port/*/startup/*.s must be tracked
 .idea/
 .vscode/
 *.swp
