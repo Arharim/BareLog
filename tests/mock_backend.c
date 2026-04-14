@@ -4,6 +4,10 @@ void blog_uart_init(void)
 {
 }
 
+void blog_uart_deinit(void)
+{
+}
+
 uint16_t blog_uart_dma_running(void)
 {
 	return 0u;
@@ -16,6 +20,10 @@ void blog_uart_dma_send(const uint8_t *data, uint16_t len)
 }
 
 void blog_timestamp_init(void)
+{
+}
+
+void blog_timestamp_deinit(void)
 {
 }
 

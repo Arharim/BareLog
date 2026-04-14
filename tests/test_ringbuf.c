@@ -15,6 +15,7 @@ void tearDown(void)
 static void test_init_empty(void)
 {
 	TEST_ASSERT_EQUAL_UINT16(0u, blog_ringbuf_available(&rb));
+	TEST_ASSERT_EQUAL_UINT16(0u, blog_ringbuf_get_dropped(&rb));
 }
 
 static void test_push_pop_single(void)
@@ -127,6 +128,123 @@ static void test_partial_pop(void)
 	TEST_ASSERT_EQUAL_UINT8(40u, out[1u]);
 }
 
+static void test_dropped_counter(void)
+{
+	uint8_t data[20u];
+	uint16_t i;
+
+	for (i = 0u; i < 20u; i++)
+	{
+		data[i] = (uint8_t)i;
+	}
+
+	blog_ringbuf_push(&rb, data, 20u);
+	TEST_ASSERT_EQUAL_UINT16(5u, blog_ringbuf_get_dropped(&rb));
+}
+
+static void test_dropped_accumulate(void)
+{
+	uint8_t data[20u];
+	uint16_t i;
+
+	for (i = 0u; i < 20u; i++)
+	{
+		data[i] = (uint8_t)i;
+	}
+
+	blog_ringbuf_push(&rb, data, 20u);
+	TEST_ASSERT_EQUAL_UINT16(5u, blog_ringbuf_get_dropped(&rb));
+
+	blog_ringbuf_pop(&rb, data, 15u);
+
+	blog_ringbuf_push(&rb, data, 20u);
+	TEST_ASSERT_EQUAL_UINT16(10u, blog_ringbuf_get_dropped(&rb));
+}
+
+static void test_dropped_saturate(void)
+{
+	uint8_t data[16u];
+	uint16_t i;
+
+	for (i = 0u; i < 16u; i++)
+	{
+		data[i] = (uint8_t)i;
+	}
+
+	blog_ringbuf_push(&rb, data, 16u);
+
+	for (i = 0u; i < 5000u; i++)
+	{
+		blog_ringbuf_push(&rb, data, 16u);
+	}
+
+	TEST_ASSERT_EQUAL_UINT16(65535u, blog_ringbuf_get_dropped(&rb));
+}
+
+static void test_clear_dropped(void)
+{
+	uint8_t data[20u];
+	uint16_t i;
+
+	for (i = 0u; i < 20u; i++)
+	{
+		data[i] = (uint8_t)i;
+	}
+
+	blog_ringbuf_push(&rb, data, 20u);
+	TEST_ASSERT_TRUE(blog_ringbuf_get_dropped(&rb) > 0u);
+
+	blog_ringbuf_clear_dropped(&rb);
+	TEST_ASSERT_EQUAL_UINT16(0u, blog_ringbuf_get_dropped(&rb));
+}
+
+static void test_flush_clears_dropped(void)
+{
+	uint8_t data[20u];
+	uint16_t i;
+
+	for (i = 0u; i < 20u; i++)
+	{
+		data[i] = (uint8_t)i;
+	}
+
+	blog_ringbuf_push(&rb, data, 20u);
+	blog_ringbuf_flush(&rb);
+	TEST_ASSERT_EQUAL_UINT16(0u, blog_ringbuf_get_dropped(&rb));
+}
+
+static void test_isr_push_pop(void)
+{
+	uint8_t data[] = {0xAAu, 0xBBu, 0xCCu};
+	uint8_t out[3u];
+	uint16_t pushed;
+	uint16_t popped;
+
+	pushed = blog_ringbuf_push_isr(&rb, data, 3u);
+	TEST_ASSERT_EQUAL_UINT16(3u, pushed);
+
+	popped = blog_ringbuf_pop_isr(&rb, out, 3u);
+	TEST_ASSERT_EQUAL_UINT16(3u, popped);
+	TEST_ASSERT_EQUAL_UINT8(0xAAu, out[0u]);
+	TEST_ASSERT_EQUAL_UINT8(0xBBu, out[1u]);
+	TEST_ASSERT_EQUAL_UINT8(0xCCu, out[2u]);
+}
+
+static void test_push_zero_len(void)
+{
+	uint8_t data = 0u;
+	uint16_t pushed = blog_ringbuf_push(&rb, &data, 0u);
+	TEST_ASSERT_EQUAL_UINT16(0u, pushed);
+	TEST_ASSERT_EQUAL_UINT16(0u, blog_ringbuf_available(&rb));
+}
+
+static void test_pop_zero_len(void)
+{
+	uint8_t out = 0u;
+	uint16_t popped = blog_ringbuf_pop(&rb, &out, 0u);
+	TEST_ASSERT_EQUAL_UINT16(0u, popped);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -139,6 +257,14 @@ int main(void)
 	RUN_TEST(test_pop_empty);
 	RUN_TEST(test_flush);
 	RUN_TEST(test_partial_pop);
+	RUN_TEST(test_dropped_counter);
+	RUN_TEST(test_dropped_accumulate);
+	RUN_TEST(test_dropped_saturate);
+	RUN_TEST(test_clear_dropped);
+	RUN_TEST(test_flush_clears_dropped);
+	RUN_TEST(test_isr_push_pop);
+	RUN_TEST(test_push_zero_len);
+	RUN_TEST(test_pop_zero_len);
 
 	return UNITY_END();
 }
