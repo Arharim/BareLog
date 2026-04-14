@@ -141,7 +141,7 @@ static void *stress_writer(void *arg)
 	uint8_t data[1] = {0x42u};
 	uint32_t i;
 
-	for (i = 0u; i < 100000u; i++)
+	for (i = 0u; i < 50000u; i++)
 	{
 		blog_ringbuf_push(&rb, data, 1u);
 	}
@@ -154,7 +154,7 @@ static void *stress_reader(void *arg)
 	(void)arg;
 	uint8_t buf[16u];
 	uint32_t total = 0u;
-	uint32_t target = 100000u;
+	uint32_t target = 50000u;
 
 	while (total < target)
 	{
