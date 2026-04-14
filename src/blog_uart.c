@@ -3,8 +3,6 @@
 #include "blog_uart_port.h"
 #include "stm32f10x.h"
 
-#define BLOG_DMA_CHANNEL DMA1_Channel4
-
 static volatile uint16_t dma_tx_len;
 
 static void gpio_init(void)
@@ -42,11 +40,11 @@ static void dma_init(void)
 {
 	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 
-	BLOG_DMA_CHANNEL->CCR = 0u;
+	BLOG_UART_DMA_CHANNEL->CCR = 0u;
 	dma_tx_len = 0u;
 
-	NVIC_SetPriority(DMA1_Channel4_IRQn, 1u);
-	NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+	NVIC_SetPriority(BLOG_UART_DMA_IRQn, 1u);
+	NVIC_EnableIRQ(BLOG_UART_DMA_IRQn);
 }
 
 void blog_uart_init(void)
@@ -65,6 +63,17 @@ void blog_uart_init(void)
 	BLOG_UARTx->CR3 = USART_CR3_DMAT;
 }
 
+void blog_uart_deinit(void)
+{
+	BLOG_UART_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
+	NVIC_DisableIRQ(BLOG_UART_DMA_IRQn);
+
+	BLOG_UARTx->CR1 &= ~(uint16_t)USART_CR1_UE;
+	BLOG_UARTx->CR3 &= ~(uint16_t)USART_CR3_DMAT;
+
+	dma_tx_len = 0u;
+}
+
 void blog_uart_dma_send(const uint8_t *data, uint16_t len)
 {
 	if (len == 0u)
@@ -74,17 +83,17 @@ void blog_uart_dma_send(const uint8_t *data, uint16_t len)
 
 	dma_tx_len = len;
 
-	BLOG_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
-	BLOG_DMA_CHANNEL->CMAR = (uint32_t)data;
-	BLOG_DMA_CHANNEL->CPAR = (uint32_t)&(BLOG_UARTx->DR);
-	BLOG_DMA_CHANNEL->CNDTR = (uint32_t)len;
-	BLOG_DMA_CHANNEL->CCR =
+	BLOG_UART_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
+	BLOG_UART_DMA_CHANNEL->CMAR = (uint32_t)data;
+	BLOG_UART_DMA_CHANNEL->CPAR = (uint32_t)&(BLOG_UARTx->DR);
+	BLOG_UART_DMA_CHANNEL->CNDTR = (uint32_t)len;
+	BLOG_UART_DMA_CHANNEL->CCR =
 	    (uint32_t)((1u << 7u) | (1u << 4u) | (1u << 1u) | (1u << 3u) | 0x01u);
 }
 
 uint16_t blog_uart_dma_running(void)
 {
-	if ((BLOG_DMA_CHANNEL->CCR & 0x01u) != 0u)
+	if ((BLOG_UART_DMA_CHANNEL->CCR & 0x01u) != 0u)
 	{
 		return 1u;
 	}
@@ -94,11 +103,11 @@ uint16_t blog_uart_dma_running(void)
 
 void blog_uart_dma_irq_handler(void)
 {
-	if ((DMA1->ISR & (1u << 13u)) != 0u)
+	if ((DMA1->ISR & BLOG_UART_DMA_TCIF_BIT) != 0u)
 	{
-		DMA1->IFCR = (1u << 13u);
+		DMA1->IFCR = BLOG_UART_DMA_TCIF_BIT;
 	}
 
 	dma_tx_len = 0u;
-	BLOG_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
+	BLOG_UART_DMA_CHANNEL->CCR &= ~(uint32_t)0x01u;
 }

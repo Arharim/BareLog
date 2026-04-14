@@ -72,13 +72,20 @@ BLOG_STATIC_ASSERT(BLOG_RINGBUF_SIZE >= 8u, blog_ringbuf_size_too_small);
 #	define BLOG_ENABLE_COLOR 0
 #endif
 
-#ifdef BLOG_MODULE
-#	ifndef BLOG_MODULE_WHITELIST
-#		define BLOG_MODULE_WHITELIST
-#	endif
-#	ifndef BLOG_MODULE_BLACKLIST
-#		define BLOG_MODULE_BLACKLIST
-#	endif
+#ifndef BLOG_MODULE
+#	define BLOG_MODULE 0u
+#endif
+
+#ifndef BLOG_MODULE_WHITELIST_INIT
+#	define BLOG_MODULE_WHITELIST_INIT 0xFFFFFFFFu
+#endif
+
+#ifndef BLOG_MODULE_BLACKLIST_INIT
+#	define BLOG_MODULE_BLACKLIST_INIT 0u
+#endif
+
+#ifndef BLOG_FLUSH_MAX_ITERATIONS
+#	define BLOG_FLUSH_MAX_ITERATIONS 1000u
 #endif
 
 #endif

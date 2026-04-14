@@ -10,4 +10,8 @@
 #define BLOG_UART_RX_PIN   10u
 #define BLOG_UART_CLOCK_HZ 72000000u
 
+#define BLOG_UART_DMA_CHANNEL  DMA1_Channel4
+#define BLOG_UART_DMA_IRQn     DMA1_Channel4_IRQn
+#define BLOG_UART_DMA_TCIF_BIT (1u << 13u)
+
 #endif
