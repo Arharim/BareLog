@@ -1,8 +1,8 @@
 /**
   *************** (C) COPYRIGHT 2017 STMicroelectronics ************************
-  * @file      startup_stm32f100xb.s
+  * @file      startup_stm32f100xe.s
   * @author    MCD Application Team
-  * @brief     STM32F100xB Devices vector table for Atollic toolchain.
+  * @brief     STM32F100xE Devices vector table for Atollic toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -127,6 +127,7 @@ Infinite_Loop:
 
 
 g_pfnVectors:
+
   .word _estack
   .word Reset_Handler
   .word NMI_Handler
@@ -186,19 +187,24 @@ g_pfnVectors:
   .word EXTI15_10_IRQHandler
   .word RTC_Alarm_IRQHandler
   .word CEC_IRQHandler
+  .word TIM12_IRQHandler
+  .word TIM13_IRQHandler
+  .word TIM14_IRQHandler
   .word 0
   .word 0
   .word 0
   .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
+  .word TIM5_IRQHandler
+  .word SPI3_IRQHandler
+  .word UART4_IRQHandler
+  .word UART5_IRQHandler
   .word TIM6_DAC_IRQHandler
   .word TIM7_IRQHandler  
+  .word DMA2_Channel1_IRQHandler
+  .word DMA2_Channel2_IRQHandler
+  .word DMA2_Channel3_IRQHandler
+  .word DMA2_Channel4_5_IRQHandler
+  .word DMA2_Channel5_IRQHandler
   .word 0
   .word 0
   .word 0
@@ -242,8 +248,8 @@ g_pfnVectors:
   .word 0
   .word 0
   .word 0
-  .word BootRAM          /* @0x01CC. This is for boot in RAM mode for 
-                            STM32F10xB Value Line devices. */
+  .word  BootRAM       /* @0x1E0. This is for boot in RAM mode for 
+                         STM32F10x High Density Value line devices. */
 
 /*******************************************************************************
 *
@@ -355,7 +361,7 @@ g_pfnVectors:
 
   .weak  TIM2_IRQHandler
   .thumb_set TIM2_IRQHandler,Default_Handler
-  
+
   .weak  TIM3_IRQHandler
   .thumb_set TIM3_IRQHandler,Default_Handler
 
@@ -367,16 +373,16 @@ g_pfnVectors:
 
   .weak  I2C1_ER_IRQHandler
   .thumb_set I2C1_ER_IRQHandler,Default_Handler
-  
+
   .weak  I2C2_EV_IRQHandler
-  .thumb_set I2C1_EV_IRQHandler,Default_Handler
+  .thumb_set I2C2_EV_IRQHandler,Default_Handler
 
   .weak  I2C2_ER_IRQHandler
-  .thumb_set I2C1_ER_IRQHandler,Default_Handler
+  .thumb_set I2C2_ER_IRQHandler,Default_Handler
 
   .weak  SPI1_IRQHandler
   .thumb_set SPI1_IRQHandler,Default_Handler
-  
+
   .weak  SPI2_IRQHandler
   .thumb_set SPI2_IRQHandler,Default_Handler
 
@@ -385,7 +391,7 @@ g_pfnVectors:
 
   .weak  USART2_IRQHandler
   .thumb_set USART2_IRQHandler,Default_Handler
-  
+
   .weak  USART3_IRQHandler
   .thumb_set USART3_IRQHandler,Default_Handler
 
@@ -398,10 +404,46 @@ g_pfnVectors:
   .weak  CEC_IRQHandler
   .thumb_set CEC_IRQHandler,Default_Handler
 
+  .weak  TIM12_IRQHandler
+  .thumb_set TIM12_IRQHandler,Default_Handler
+
+  .weak  TIM13_IRQHandler
+  .thumb_set TIM13_IRQHandler,Default_Handler
+
+  .weak  TIM14_IRQHandler
+  .thumb_set TIM14_IRQHandler,Default_Handler
+
+  .weak  TIM5_IRQHandler
+  .thumb_set TIM5_IRQHandler,Default_Handler
+
+  .weak  SPI3_IRQHandler
+  .thumb_set SPI3_IRQHandler,Default_Handler
+
+  .weak  UART4_IRQHandler
+  .thumb_set UART4_IRQHandler,Default_Handler
+
+  .weak  UART5_IRQHandler
+  .thumb_set UART5_IRQHandler,Default_Handler
+  
   .weak  TIM6_DAC_IRQHandler
   .thumb_set TIM6_DAC_IRQHandler,Default_Handler
 
   .weak  TIM7_IRQHandler
-  .thumb_set TIM7_IRQHandler,Default_Handler  
+  .thumb_set TIM7_IRQHandler,Default_Handler 
+
+  .weak  DMA2_Channel1_IRQHandler
+  .thumb_set DMA2_Channel1_IRQHandler,Default_Handler
+
+  .weak  DMA2_Channel2_IRQHandler
+  .thumb_set DMA2_Channel2_IRQHandler,Default_Handler
+
+  .weak  DMA2_Channel3_IRQHandler
+  .thumb_set DMA2_Channel3_IRQHandler,Default_Handler
+
+  .weak  DMA2_Channel4_5_IRQHandler
+  .thumb_set DMA2_Channel4_5_IRQHandler,Default_Handler  
+
+  .weak  DMA2_Channel5_IRQHandler
+  .thumb_set DMA2_Channel5_IRQHandler,Default_Handler
 
 

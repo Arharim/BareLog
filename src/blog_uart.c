@@ -1,7 +1,7 @@
 #include "blog_uart.h"
 #include "blog_config.h"
 #include "blog_uart_port.h"
-#include "stm32f10x.h"
+#include "stm32f1xx.h"
 
 static volatile uint16_t dma_tx_len;
 

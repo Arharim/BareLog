@@ -2,15 +2,17 @@ default: build-arm
 
 # ── ARM cross-compile (requires arm-none-eabi-gcc) ──────────────────
 
-build-arm:
+build-arm chip="STM32F103xB":
 	cmake -B build-arm -G "MinGW Makefiles" \
-		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake .
+		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake \
+		-DSTM32F1_CHIP={{ chip }} .
 	cmake --build build-arm
 
-build-arm-f4:
+build-arm-f4 chip="STM32F407VG":
 	cmake -B build-arm-f4 -G "MinGW Makefiles" \
 		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake \
-		-DUHAL_TARGET=stm32f4 .
+		-DUHAL_TARGET=stm32f4 \
+		-DSTM32F4_CHIP={{ chip }} .
 	cmake --build build-arm-f4
 
 rebuild: clean-arm build-arm

@@ -1,6 +1,6 @@
 #include "blog_flash.h"
 #include "blog_config.h"
-#include "stm32f10x.h"
+#include "stm32f1xx.h"
 
 static volatile uint16_t flash_pos;
 

@@ -1,8 +1,8 @@
 /**
   *************** (C) COPYRIGHT 2017 STMicroelectronics ************************
-  * @file      startup_stm32f100xb.s
+  * @file      startup_stm32f101x6.s
   * @author    MCD Application Team
-  * @brief     STM32F100xB Devices vector table for Atollic toolchain.
+  * @brief     STM32F101x6 Devices vector table for Atollic toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -127,6 +127,8 @@ Infinite_Loop:
 
 
 g_pfnVectors:
+
+
   .word _estack
   .word Reset_Handler
   .word NMI_Handler
@@ -167,25 +169,24 @@ g_pfnVectors:
   .word 0
   .word 0
   .word EXTI9_5_IRQHandler
-  .word TIM1_BRK_TIM15_IRQHandler
-  .word TIM1_UP_TIM16_IRQHandler
-  .word TIM1_TRG_COM_TIM17_IRQHandler
-  .word TIM1_CC_IRQHandler
+  .word 0
+  .word 0
+  .word 0
+  .word 0
   .word TIM2_IRQHandler
   .word TIM3_IRQHandler
-  .word TIM4_IRQHandler
+  .word 0
   .word I2C1_EV_IRQHandler
   .word I2C1_ER_IRQHandler
-  .word I2C2_EV_IRQHandler
-  .word I2C2_ER_IRQHandler
+  .word 0
+  .word 0
   .word SPI1_IRQHandler
-  .word SPI2_IRQHandler
+  .word 0
   .word USART1_IRQHandler
   .word USART2_IRQHandler
-  .word USART3_IRQHandler
+  .word 0
   .word EXTI15_10_IRQHandler
   .word RTC_Alarm_IRQHandler
-  .word CEC_IRQHandler
   .word 0
   .word 0
   .word 0
@@ -194,56 +195,8 @@ g_pfnVectors:
   .word 0
   .word 0
   .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word TIM6_DAC_IRQHandler
-  .word TIM7_IRQHandler  
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word 0
-  .word BootRAM          /* @0x01CC. This is for boot in RAM mode for 
-                            STM32F10xB Value Line devices. */
+  .word BootRAM        /* @0x108. This is for boot in RAM mode for
+                          STM32F10x Low Density devices.*/
 
 /*******************************************************************************
 *
@@ -253,16 +206,15 @@ g_pfnVectors:
 *
 *******************************************************************************/
 
-    
   .weak  NMI_Handler
   .thumb_set NMI_Handler,Default_Handler
-  
+
   .weak  HardFault_Handler
   .thumb_set HardFault_Handler,Default_Handler
-  
+
   .weak  MemManage_Handler
   .thumb_set MemManage_Handler,Default_Handler
-  
+
   .weak  BusFault_Handler
   .thumb_set BusFault_Handler,Default_Handler
 
@@ -341,67 +293,30 @@ g_pfnVectors:
   .weak  EXTI9_5_IRQHandler
   .thumb_set EXTI9_5_IRQHandler,Default_Handler
 
-  .weak  TIM1_BRK_TIM15_IRQHandler
-  .thumb_set TIM1_BRK_TIM15_IRQHandler,Default_Handler
-
-  .weak  TIM1_UP_TIM16_IRQHandler
-  .thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
-
-  .weak  TIM1_TRG_COM_TIM17_IRQHandler
-  .thumb_set TIM1_TRG_COM_TIM17_IRQHandler,Default_Handler
-
-  .weak  TIM1_CC_IRQHandler
-  .thumb_set TIM1_CC_IRQHandler,Default_Handler
-
   .weak  TIM2_IRQHandler
   .thumb_set TIM2_IRQHandler,Default_Handler
-  
+
   .weak  TIM3_IRQHandler
   .thumb_set TIM3_IRQHandler,Default_Handler
-
-  .weak  TIM4_IRQHandler
-  .thumb_set TIM4_IRQHandler,Default_Handler
 
   .weak  I2C1_EV_IRQHandler
   .thumb_set I2C1_EV_IRQHandler,Default_Handler
 
   .weak  I2C1_ER_IRQHandler
   .thumb_set I2C1_ER_IRQHandler,Default_Handler
-  
-  .weak  I2C2_EV_IRQHandler
-  .thumb_set I2C1_EV_IRQHandler,Default_Handler
-
-  .weak  I2C2_ER_IRQHandler
-  .thumb_set I2C1_ER_IRQHandler,Default_Handler
 
   .weak  SPI1_IRQHandler
   .thumb_set SPI1_IRQHandler,Default_Handler
-  
-  .weak  SPI2_IRQHandler
-  .thumb_set SPI2_IRQHandler,Default_Handler
 
   .weak  USART1_IRQHandler
   .thumb_set USART1_IRQHandler,Default_Handler
 
   .weak  USART2_IRQHandler
   .thumb_set USART2_IRQHandler,Default_Handler
-  
-  .weak  USART3_IRQHandler
-  .thumb_set USART3_IRQHandler,Default_Handler
 
   .weak  EXTI15_10_IRQHandler
   .thumb_set EXTI15_10_IRQHandler,Default_Handler
 
   .weak  RTC_Alarm_IRQHandler
   .thumb_set RTC_Alarm_IRQHandler,Default_Handler
-
-  .weak  CEC_IRQHandler
-  .thumb_set CEC_IRQHandler,Default_Handler
-
-  .weak  TIM6_DAC_IRQHandler
-  .thumb_set TIM6_DAC_IRQHandler,Default_Handler
-
-  .weak  TIM7_IRQHandler
-  .thumb_set TIM7_IRQHandler,Default_Handler  
-
 
