@@ -27,8 +27,16 @@ jobs:
         run: ctest --output-on-failure
 
   arm-cross-build:
-    name: ARM cross-compile
+    name: ARM cross-compile (${{ matrix.backend }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        backend:
+          - BLOG_BACKEND_UART_DMA
+          - BLOG_BACKEND_SWO
+          - BLOG_BACKEND_RTT
+          - BLOG_BACKEND_FLASH
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +48,16 @@ jobs:
           sudo apt-get install -y gcc-arm-none-eabi cmake
 
       - name: Configure
-        run: cmake -B build-arm --toolchain toolchain-arm.cmake .
+        run: >
+          cmake -B build-arm --toolchain toolchain-arm.cmake
+          -DBLOG_BACKEND=${{ matrix.backend }} .
 
       - name: Build
         run: cmake --build build-arm
+
+      - name: Report size
+        run: |
+          echo "## ${{ matrix.backend }} footprint" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          arm-none-eabi-size build-arm/BareLog.elf >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

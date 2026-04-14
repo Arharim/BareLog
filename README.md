@@ -84,6 +84,42 @@ blog_set_module_whitelist(0x03);  // enable modules 1 and 2
 blog_set_module_blacklist(0x04);  // disable module 3
 ```
 
+## Examples
+
+Minimal `main.c` for each backend in `examples/`:
+
+```
+examples/uart_dma/   Full demo: levels, hexdump, module filter, deinit
+examples/swo/        Minimal SWO output loop
+examples/rtt/        RTT speed test with hexdump
+examples/flash/      Crash log write + register dump
+```
+
+Build an example by setting `BLOG_BACKEND` and swapping `src/main.c`:
+
+```bash
+# UART DMA (default)
+just build-arm
+
+# SWO
+cmake -B build-arm --toolchain toolchain-arm.cmake -DBLOG_BACKEND=BLOG_BACKEND_SWO .
+cmake --build build-arm
+```
+
+## ROM/RAM Footprint
+
+Automatically measured by CI for all 4 backends (STM32F103, `-Os`).
+See the **GitHub Actions job summary** for per-backend `text/data/bss` breakdown.
+
+Typical figures (core + backend only, excluding startup):
+
+| Backend | ROM (text) | RAM (data+bss) |
+|---------|-----------|----------------|
+| UART DMA | ~3 KB | ~260 B + ringbuf |
+| SWO | ~2 KB | ~260 B + ringbuf |
+| SEGGER RTT | ~4 KB | ~260 B + ringbuf + RTT buffer |
+| Flash | ~2.5 KB | ~260 B + ringbuf |
+
 ## Backend Comparison
 
 | Backend | Speed | Requires | Use case |
@@ -130,6 +166,7 @@ cmsis/            CMSIS core headers (F0, F1, F4)
 ext/              External: SEGGER RTT
 tests/            Unity test suite (host)
 tools/            Flash decode utility
+examples/         Per-backend minimal examples
 ```
 
 ## License
