@@ -329,6 +329,49 @@ static void test_format_buf_overflow(void)
 	TEST_ASSERT_EQUAL_CHAR('h', buf[0u]);
 }
 
+static void test_format_long_int(void)
+{
+	char buf[64u];
+	uint16_t len = call_format_msg(buf, sizeof(buf), "val=%ld", (long)-123456);
+	buf[len] = '\0';
+	TEST_ASSERT_EQUAL_STRING("val=-123456", buf);
+}
+
+static void test_format_unsigned_long(void)
+{
+	char buf[64u];
+	uint16_t len =
+	    call_format_msg(buf, sizeof(buf), "val=%lu", (unsigned long)999999u);
+	buf[len] = '\0';
+	TEST_ASSERT_EQUAL_STRING("val=999999", buf);
+}
+
+static void test_format_long_hex(void)
+{
+	char buf[64u];
+	uint16_t len =
+	    call_format_msg(buf, sizeof(buf), "hex=%lx", (unsigned long)0xDEADu);
+	buf[len] = '\0';
+	TEST_ASSERT_EQUAL_STRING("hex=dead", buf);
+}
+
+static void test_format_long_long_int(void)
+{
+	char buf[64u];
+	uint16_t len = call_format_msg(buf, sizeof(buf), "ll=%lld", (long long)-42);
+	buf[len] = '\0';
+	TEST_ASSERT_EQUAL_STRING("ll=-42", buf);
+}
+
+static void test_format_long_long_hex(void)
+{
+	char buf[64u];
+	uint16_t len =
+	    call_format_msg(buf, sizeof(buf), "ll=%llX", (unsigned long long)0xFFu);
+	buf[len] = '\0';
+	TEST_ASSERT_EQUAL_STRING("ll=FF", buf);
+}
+
 int main(void)
 {
 	UNITY_BEGIN();
@@ -369,6 +412,11 @@ int main(void)
 	RUN_TEST(test_format_prefix_overflow);
 	RUN_TEST(test_format_null_string);
 	RUN_TEST(test_format_buf_overflow);
+	RUN_TEST(test_format_long_int);
+	RUN_TEST(test_format_unsigned_long);
+	RUN_TEST(test_format_long_hex);
+	RUN_TEST(test_format_long_long_int);
+	RUN_TEST(test_format_long_long_hex);
 
 	return UNITY_END();
 }

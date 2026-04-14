@@ -17,6 +17,7 @@ set(BLOG_CORE_SOURCES
 	${CMAKE_SOURCE_DIR}/src/blog.c
 	${CMAKE_SOURCE_DIR}/src/blog_ringbuf.c
 	${CMAKE_SOURCE_DIR}/src/blog_timestamp.c
+	${CMAKE_SOURCE_DIR}/src/blog_rtos.c
 )
 
 set(BLOG_BACKEND_SOURCES "")

@@ -47,10 +47,6 @@ BLOG_STATIC_ASSERT((BLOG_RINGBUF_SIZE & (BLOG_RINGBUF_SIZE - 1u)) == 0u,
                    blog_ringbuf_size_must_be_power_of_2);
 BLOG_STATIC_ASSERT(BLOG_RINGBUF_SIZE >= 8u, blog_ringbuf_size_too_small);
 
-#ifndef BLOG_UART_BAUDRATE
-#	define BLOG_UART_BAUDRATE 115200u
-#endif
-
 #ifndef BLOG_ENABLE_TIMESTAMP
 #	define BLOG_ENABLE_TIMESTAMP 0
 #endif
@@ -86,6 +82,25 @@ BLOG_STATIC_ASSERT(BLOG_RINGBUF_SIZE >= 8u, blog_ringbuf_size_too_small);
 
 #ifndef BLOG_FLUSH_MAX_ITERATIONS
 #	define BLOG_FLUSH_MAX_ITERATIONS 1000u
+#endif
+
+#define BLOG_RTOS_NONE     0
+#define BLOG_RTOS_FREERTOS 1
+#define BLOG_RTOS_THREADX  2
+
+#ifndef BLOG_RTOS
+#	define BLOG_RTOS BLOG_RTOS_NONE
+#endif
+
+#if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
+#	ifndef BLOG_UART_BAUDRATE
+#		define BLOG_UART_BAUDRATE 115200u
+#	endif
+#	ifndef BLOG_UART_CLOCK_HZ
+#		define BLOG_UART_CLOCK_HZ 72000000u
+#	endif
+BLOG_STATIC_ASSERT(BLOG_UART_BAUDRATE > 0u, blog_uart_baudrate_not_set);
+BLOG_STATIC_ASSERT(BLOG_UART_CLOCK_HZ > 0u, blog_uart_clock_not_set);
 #endif
 
 #endif

@@ -48,6 +48,24 @@ target_compile_definitions(test_format PRIVATE
 
 target_link_libraries(test_format unity)
 
+find_package(Threads REQUIRED)
+
+add_executable(test_concurrent
+	test_concurrent.c
+	${CMAKE_SOURCE_DIR}/../src/blog_ringbuf.c
+)
+
+target_include_directories(test_concurrent PRIVATE
+	${CMAKE_SOURCE_DIR}/../include
+)
+
+target_compile_definitions(test_concurrent PRIVATE
+	BLOG_RINGBUF_SIZE=256
+)
+
+target_link_libraries(test_concurrent unity Threads::Threads)
+
 enable_testing()
 add_test(NAME ringbuf COMMAND test_ringbuf)
 add_test(NAME format COMMAND test_format)
+add_test(NAME concurrent COMMAND test_concurrent)

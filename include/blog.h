@@ -6,6 +6,10 @@
 #include "blog_levels.h"
 #include "blog_ringbuf.h"
 
+#if BLOG_RTOS != BLOG_RTOS_NONE
+#	include "blog_rtos.h"
+#endif
+
 #if BLOG_BACKEND == BLOG_BACKEND_UART_DMA
 #	include "blog_uart.h"
 #elif BLOG_BACKEND == BLOG_BACKEND_SWO

@@ -297,42 +297,125 @@ BLOG_STATIC uint16_t format_msg(char *out, uint16_t out_size, const char *fmt,
 
 		char spec = fmt[i++];
 
+		uint8_t is_long = 0u;
+		if (spec == 'l')
+		{
+			is_long = 1u;
+			if (fmt[i] == 'l')
+			{
+				is_long = 2u;
+				i++;
+			}
+			if (fmt[i] == '\0')
+			{
+				break;
+			}
+			spec = fmt[i++];
+		}
+
 		if (spec == 'd' || spec == 'i')
 		{
-			int val = va_arg(args, int);
 			uint32_t uval;
-			if (val < 0)
+			if (is_long == 2u)
 			{
-				if (pos < out_size)
+				long long v = va_arg(args, long long);
+				if (v < 0)
 				{
-					out[pos++] = '-';
+					if (pos < out_size)
+						out[pos++] = '-';
+					uval = (uint32_t)(-(unsigned long long)v);
 				}
-				uval = (uint32_t)(-val);
+				else
+				{
+					uval = (uint32_t)(unsigned long long)v;
+				}
+			}
+			else if (is_long == 1u)
+			{
+				long v = va_arg(args, long);
+				if (v < 0)
+				{
+					if (pos < out_size)
+						out[pos++] = '-';
+					uval = (uint32_t)(-(unsigned long)v);
+				}
+				else
+				{
+					uval = (uint32_t)(unsigned long)v;
+				}
 			}
 			else
 			{
-				uval = (uint32_t)val;
+				int val = va_arg(args, int);
+				if (val < 0)
+				{
+					if (pos < out_size)
+					{
+						out[pos++] = '-';
+					}
+					uval = (uint32_t)(-val);
+				}
+				else
+				{
+					uval = (uint32_t)val;
+				}
 			}
 			pos += uint32_to_str_padded(&out[pos], (uint16_t)(out_size - pos),
 			                            uval, width, zero_pad);
 		}
 		else if (spec == 'u')
 		{
-			uint32_t val = va_arg(args, uint32_t);
+			uint32_t val;
+			if (is_long == 2u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long long);
+			}
+			else if (is_long == 1u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long);
+			}
+			else
+			{
+				val = va_arg(args, uint32_t);
+			}
 			pos += uint32_to_str_padded(&out[pos], (uint16_t)(out_size - pos),
 			                            val, width, zero_pad);
 		}
 		else if (spec == 'x')
 		{
 			static const char hex_lo[] = "0123456789abcdef";
-			uint32_t val = va_arg(args, uint32_t);
+			uint32_t val;
+			if (is_long == 2u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long long);
+			}
+			else if (is_long == 1u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long);
+			}
+			else
+			{
+				val = va_arg(args, uint32_t);
+			}
 			pos += uint32_to_hex(&out[pos], (uint16_t)(out_size - pos), val,
 			                     hex_lo, width, zero_pad);
 		}
 		else if (spec == 'X')
 		{
 			static const char hex_hi[] = "0123456789ABCDEF";
-			uint32_t val = va_arg(args, uint32_t);
+			uint32_t val;
+			if (is_long == 2u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long long);
+			}
+			else if (is_long == 1u)
+			{
+				val = (uint32_t)va_arg(args, unsigned long);
+			}
+			else
+			{
+				val = va_arg(args, uint32_t);
+			}
 			pos += uint32_to_hex(&out[pos], (uint16_t)(out_size - pos), val,
 			                     hex_hi, width, zero_pad);
 		}
@@ -468,6 +551,9 @@ void blog_init(void)
 #if BLOG_ENABLE_TIMESTAMP
 	blog_timestamp_init();
 #endif
+#if BLOG_RTOS != BLOG_RTOS_NONE
+	blog_rtos_init();
+#endif
 }
 
 void blog_deinit(void)
@@ -509,8 +595,15 @@ uint32_t blog_get_module_blacklist(void)
 
 void blog_flush(void)
 {
+#if BLOG_RTOS != BLOG_RTOS_NONE
+	blog_rtos_lock();
+#endif
+
 	if (backend_busy() != 0u)
 	{
+#if BLOG_RTOS != BLOG_RTOS_NONE
+		blog_rtos_unlock();
+#endif
 		return;
 	}
 
@@ -529,6 +622,10 @@ void blog_flush(void)
 	{
 		backend_send(blog_tx_buf, count);
 	}
+
+#if BLOG_RTOS != BLOG_RTOS_NONE
+	blog_rtos_unlock();
+#endif
 }
 
 void blog_flush_blocking(uint32_t max_iterations)
