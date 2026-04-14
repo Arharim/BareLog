@@ -1,0 +1,16 @@
+#ifndef BLOG_FLASH_PORT_H
+#define BLOG_FLASH_PORT_H
+
+#ifndef BLOG_FLASH_SECTOR_ADDR
+#	define BLOG_FLASH_SECTOR_ADDR 0x08060000u
+#endif
+
+#ifndef BLOG_FLASH_SECTOR_SIZE
+#	define BLOG_FLASH_SECTOR_SIZE 128u * 1024u
+#endif
+
+#ifndef BLOG_FLASH_SECTOR_NUM
+#	define BLOG_FLASH_SECTOR_NUM 7u
+#endif
+
+#endif

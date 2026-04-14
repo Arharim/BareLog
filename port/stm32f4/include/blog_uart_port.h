@@ -1,0 +1,25 @@
+#ifndef BLOG_UART_PORT_H
+#define BLOG_UART_PORT_H
+
+/*
+ * STM32F407VGT6 UART DMA configuration
+ * USART2 on PA2/PA3, DMA2 Stream6 Channel 4
+ * 84 MHz APB1 clock
+ */
+
+#define BLOG_UARTx         USART2
+#define BLOG_UART_RCC_BIT  RCC_APB1ENR_USART2EN
+#define BLOG_UART_RCC_BUS  APB1ENR
+#define BLOG_UART_GPIO     GPIOA
+#define BLOG_UART_GPIO_RCC RCC_AHB1ENR_GPIOAEN
+#define BLOG_UART_TX_PIN   2u
+#define BLOG_UART_RX_PIN   3u
+#define BLOG_UART_AF       7u
+#define BLOG_UART_CLOCK_HZ 84000000u
+
+#define BLOG_UART_DMA_CHANNEL     DMA2_Stream6
+#define BLOG_UART_DMA_IRQn        DMA2_Stream6_IRQn
+#define BLOG_UART_DMA_TCIF_BIT    (1u << 22u)
+#define BLOG_UART_DMA_CHANNEL_SEL 4u
+
+#endif
