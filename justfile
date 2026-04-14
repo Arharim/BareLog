@@ -7,6 +7,12 @@ build-arm:
 		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake .
 	cmake --build build-arm
 
+build-arm-f4:
+	cmake -B build-arm-f4 -G "MinGW Makefiles" \
+		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake \
+		-DUHAL_TARGET=stm32f4 .
+	cmake --build build-arm-f4
+
 rebuild: clean-arm build-arm
 
 flash-stlink: build-arm
@@ -19,6 +25,9 @@ flash-jlink: build-arm
 
 clean-arm:
 	rm -rf build-arm
+
+clean-arm-f4:
+	rm -rf build-arm-f4
 
 # ── Build specific backend ──────────────────────────────────────────
 
@@ -71,5 +80,5 @@ flash-decode file:
 
 # ── All clean ───────────────────────────────────────────────────────
 
-clean: clean-arm clean-tests
+clean: clean-arm clean-arm-f4 clean-tests
 	rm -rf build-BLOG_BACKEND_*

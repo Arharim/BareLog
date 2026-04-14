@@ -27,16 +27,22 @@ jobs:
         run: ctest --output-on-failure
 
   arm-cross-build:
-    name: ARM cross-compile (${{ matrix.backend }})
+    name: ARM ${{ matrix.target }} (${{ matrix.backend }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        target: [stm32f1]
         backend:
           - BLOG_BACKEND_UART_DMA
           - BLOG_BACKEND_SWO
           - BLOG_BACKEND_RTT
           - BLOG_BACKEND_FLASH
+        include:
+          - target: stm32f4
+            backend: BLOG_BACKEND_UART_DMA
+          - target: stm32f4
+            backend: BLOG_BACKEND_SWO
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,6 +56,7 @@ jobs:
       - name: Configure
         run: >
           cmake -B build-arm --toolchain toolchain-arm.cmake
+          -DUHAL_TARGET=${{ matrix.target }}
           -DBLOG_BACKEND=${{ matrix.backend }} .
 
       - name: Build
@@ -57,7 +64,7 @@ jobs:
 
       - name: Report size
         run: |
-          echo "## ${{ matrix.backend }} footprint" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ matrix.target }} / ${{ matrix.backend }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           arm-none-eabi-size build-arm/BareLog.elf >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
