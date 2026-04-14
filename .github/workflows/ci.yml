@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  host-tests:
+    name: Host tests (Unity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc cmake
+
+      - name: Configure
+        run: cmake -B build-tests -S tests -DCMAKE_C_COMPILER=gcc
+
+      - name: Build
+        run: cmake --build build-tests
+
+      - name: Test
+        working-directory: build-tests
+        run: ctest --output-on-failure
+
+  arm-cross-build:
+    name: ARM cross-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi cmake
+
+      - name: Configure
+        run: cmake -B build-arm --toolchain toolchain-arm.cmake .
+
+      - name: Build
+        run: cmake --build build-arm

@@ -3,7 +3,7 @@ default: build-arm
 # ── ARM cross-compile (requires arm-none-eabi-gcc) ──────────────────
 
 build-arm:
-	cmake --fresh -B build-arm -G "MinGW Makefiles" \
+	cmake -B build-arm -G "MinGW Makefiles" \
 		-DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake .
 	cmake --build build-arm
 
@@ -23,10 +23,12 @@ clean-arm:
 # ── Host tests (native gcc) ─────────────────────────────────────────
 
 test:
-	cmake --fresh -B build-tests -S tests -G "MinGW Makefiles" \
+	cmake -B build-tests -S tests -G "MinGW Makefiles" \
 		-DCMAKE_C_COMPILER=gcc
 	cmake --build build-tests
 	ctest --test-dir build-tests --output-on-failure
+
+test-clean: clean-tests test
 
 clean-tests:
 	rm -rf build-tests
@@ -35,6 +37,11 @@ clean-tests:
 
 fmt:
 	clang-format -i src/*.c include/*.h port/stm32f1/include/*.h tests/*.c
+
+# ── Flash decode ────────────────────────────────────────────────────
+
+flash-decode file:
+	python3 tools/blog_flash_decode.py {{ file }}
 
 # ── All clean ───────────────────────────────────────────────────────
 
